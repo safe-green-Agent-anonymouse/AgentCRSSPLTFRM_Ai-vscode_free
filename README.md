@@ -131,26 +131,46 @@ ressemblent a des secrets (`token=`, `password=`, `keystore=`) sont masquees
 dans le journal. Un `git push` vers `main`/`master` est refuse tant que
 `git.push_protected` reste desactive.
 
-## Construction du .exe
+## Construction du .exe et de l'installeur
 
-`build-exe.bat` appelle PyInstaller avec `edac.spec` (`console=False`,
-`--onefile`) puis verifie l'artefact et affiche son empreinte SHA-256.
-Signature optionnelle :
+Deux artefacts, comme un logiciel Windows classique :
+
+| Artefact | Contenu |
+| --- | --- |
+| `dist\EDAC-Console.exe` | version portable, un seul fichier, icone et proprietes de version (Produit, Version, Editeur) |
+| `release\EDAC-Console-Setup-<version>.exe` | installeur : assistant FR/EN, licence, dossier au choix, Menu Demarrer, raccourci Bureau, PATH utilisateur optionnel, entree *Applications* et desinstalleur Windows |
+
+```bat
+build-exe.bat            :: icone + exe + installeur (si Inno Setup 6 est installe) + SHA-256
+iscc /DAppVersion=1.0.0 installer.iss   :: installeur seul
+```
+
+L'icone `assets/icon.ico` est regeneree par `python tools/make_icon.py`
+(Pillow, 7 resolutions de 16 a 256 px) et la ressource de version est derivee
+de `edac.__version__` par `tools/win_version.py` : une seule source de verite
+entre le code, l'`.exe` et l'installeur.
+
+Signature optionnelle (certificat non fourni, jamais versionne) :
 
 ```bat
 signtool sign /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 /f cert.pfx dist\EDAC-Console.exe
 ```
 
-Installateur optionnel : `iscc installer.iss` (Inno Setup 6) → 
-`release\EDAC-Console-Setup-1.0.0.exe`.
+## Publication
 
-Le workflow `.github/workflows/windows-exe.yml` execute les tests sur Ubuntu
-puis construit et publie le `.exe` sur `windows-latest`.
+Le workflow `.github/workflows/windows-exe.yml` execute les tests sur Ubuntu,
+puis sur `windows-latest` : icone, `.exe`, installeur Inno Setup, verification
+de demarrage de l'executable, `SHA256SUMS.txt`, artefact telechargeable. Un tag
+`v*` publie en plus une release GitHub avec les deux `.exe` et les empreintes :
+
+```bash
+git tag v1.0.0 && git push origin v1.0.0
+```
 
 ## Tests
 
 ```bash
-python -m unittest discover -s tests -v   # 36 tests : config, profils, garde-fous, journaux, reseau, desinstallation
+python -m unittest discover -s tests -v   # 42 tests : config, profils, garde-fous, journaux, reseau, desinstallation, packaging
 ```
 
 ## Limite verifiee

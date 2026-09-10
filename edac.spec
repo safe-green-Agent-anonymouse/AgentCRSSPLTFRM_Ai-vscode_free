@@ -1,7 +1,17 @@
 # PyInstaller spec — executable Windows fenetre, fichier unique.
 # Build : pyinstaller --noconfirm --clean edac.spec
 
+import sys
+from pathlib import Path
+
+ROOT = Path(SPECPATH).resolve()
+sys.path.insert(0, str(ROOT))
+
+from tools.win_version import write_version_file  # noqa: E402
+
 block_cipher = None
+icon_file = ROOT / "assets" / "icon.ico"
+version_file = write_version_file() if sys.platform == "win32" else None
 
 a = Analysis(
     ["edac/__main__.py"],
@@ -36,5 +46,6 @@ exe = EXE(
     runtime_tmpdir=None,
     console=False,          # application fenetree : pas de console noire
     disable_windowed_traceback=False,
-    icon=None,              # remplacer par "assets/icon.ico" si disponible
+    icon=str(icon_file) if icon_file.exists() else None,
+    version=str(version_file) if version_file else None,
 )

@@ -581,9 +581,12 @@ def launch(config: Config) -> int:
     setup_logging(config)
     root = Tk()
     try:
-        icon = Path(__file__).with_name("assets") / "icon.png"
-        if icon.exists():
-            root.iconphoto(True, tk.PhotoImage(file=str(icon)))
+        ico = Path(__file__).resolve().parent.parent / "assets" / "icon.ico"
+        png = Path(__file__).with_name("assets") / "icon.png"
+        if sys.platform == "win32" and ico.exists():
+            root.iconbitmap(str(ico))
+        elif png.exists():
+            root.iconphoto(True, tk.PhotoImage(file=str(png)))
     except tk.TclError:
         pass
     ConsoleApp(root, config)

@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+build/
+dist/
+release/
+*.spec.bak
+config.json.bak
+
+*.log
+logs/

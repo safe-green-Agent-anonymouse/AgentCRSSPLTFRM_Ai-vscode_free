@@ -69,23 +69,19 @@ jobs:
           Copy-Item $exe release/ -Force
           (Get-Item $exe).VersionInfo | Format-List ProductName, FileVersion, CompanyName
 
-      # Verification de demarrage : le runner n'a pas de session interactive, une
-      # application GUI peut donc rester en vie. Diagnostic informatif seulement.
+      # Application fenetre : pas de sortie console, on redirige pour diagnostic
+      # et on ne juge que le code de retour.
       - name: Test de demarrage (mode CLI)
-        continue-on-error: true
         shell: pwsh
         run: |
           $p = Start-Process -FilePath dist\EDAC-Console.exe -ArgumentList 'config','list' `
             -PassThru -RedirectStandardOutput release\smoke-stdout.txt `
             -RedirectStandardError release\smoke-stderr.txt
-          if ($p.WaitForExit(60000)) {
-            Write-Host "code de retour : $($p.ExitCode)"
-          } else {
-            Write-Host "::warning::l'executable ne s'est pas termine en 60 s (runner sans session interactive)"
-            $p.Kill()
-          }
+          $fini = $p.WaitForExit(60000)
           Get-Content release\smoke-stdout.txt -TotalCount 5 -ErrorAction SilentlyContinue
           Get-Content release\smoke-stderr.txt -TotalCount 20 -ErrorAction SilentlyContinue
+          if (-not $fini) { $p.Kill(); throw "l'executable ne s'est pas termine en 60 s" }
+          if ($p.ExitCode -ne 0) { throw "l'executable a renvoye $($p.ExitCode)" }
 
       - uses: actions/upload-artifact@v4
         with:

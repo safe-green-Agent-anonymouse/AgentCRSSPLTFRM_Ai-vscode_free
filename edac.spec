@@ -14,7 +14,7 @@ icon_file = ROOT / "assets" / "icon.ico"
 version_file = write_version_file() if sys.platform == "win32" else None
 
 a = Analysis(
-    ["edac/__main__.py"],
+    ["app.py"],
     pathex=["."],
     binaries=[],
     datas=[],

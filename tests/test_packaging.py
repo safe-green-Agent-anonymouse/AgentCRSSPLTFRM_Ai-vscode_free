@@ -1,6 +1,7 @@
 """Tests du packaging Windows : icone, ressource de version, spec, installeur."""
 from __future__ import annotations
 
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -55,6 +56,20 @@ class PackagingFilesTests(unittest.TestCase):
         spec = (ROOT / "edac.spec").read_text(encoding="utf-8")
         self.assertIn("icon=", spec)
         self.assertIn("version=", spec)
+
+    def test_spec_entry_point_is_importable_as_script(self) -> None:
+        """L'entree gelee ne doit pas utiliser d'import relatif (ImportError)."""
+        spec = (ROOT / "edac.spec").read_text(encoding="utf-8")
+        self.assertIn('["app.py"]', spec)
+        entry = (ROOT / "app.py").read_text(encoding="utf-8")
+        self.assertIn("from edac.cli import main", entry)
+
+    def test_frozen_entry_point_runs(self) -> None:
+        result = subprocess.run(
+            [sys.executable, str(ROOT / "app.py"), "config", "get", "ui.theme"],
+            capture_output=True, text=True, timeout=60, cwd=ROOT,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_installer_declares_uninstall_cleanup(self) -> None:
         iss = (ROOT / "installer.iss").read_text(encoding="utf-8")

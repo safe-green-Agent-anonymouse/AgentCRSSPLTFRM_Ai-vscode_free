@@ -9,6 +9,8 @@ on:
 
 permissions:
   contents: write
+  id-token: write
+  attestations: write
 
 jobs:
   tests:
@@ -100,6 +102,16 @@ jobs:
           Get-Content release\smoke-stderr.txt -TotalCount 20 -ErrorAction SilentlyContinue
           if (-not $fini) { $p.Kill(); throw "l'executable ne s'est pas termine en 60 s" }
           if ($p.ExitCode -ne 0) { throw "l'executable a renvoye $($p.ExitCode)" }
+
+      # Provenance verifiable (gratuite pour les depots publics) : prouve que ces
+      # binaires proviennent bien de ce workflow, verifiable via `gh attestation`.
+      - name: Attester la provenance
+        continue-on-error: true
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            dist/EDAC-Console.exe
+            release/EDAC-Console-Setup-*.exe
 
       - uses: actions/upload-artifact@v4
         with:

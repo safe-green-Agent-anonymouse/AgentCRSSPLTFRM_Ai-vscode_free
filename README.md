@@ -171,6 +171,19 @@ ignorees tant que les secrets sont absents.
 4. Relancer le workflow : `tools/sign_windows.ps1` signe et horodate l'`.exe`
    puis l'installeur, verifie chaque signature et efface le `.pfx` temporaire.
 
+### Provenance (gratuit)
+
+Chaque build attache une attestation de provenance GitHub aux deux `.exe`
+(gratuite sur les depots publics). Elle ne supprime pas l'alerte SmartScreen
+mais prouve que le binaire vient bien de ce depot et de ce workflow :
+
+```bash
+gh attestation verify EDAC-Console.exe --repo safe-green-Agent-anonymouse/AgentCRSSPLTFRM_Ai-vscode_free
+```
+
+Une signature Authenticode gratuite est possible pour les projets open source
+via SignPath Foundation (https://signpath.org/apply) ; voir `SIGNING.md`.
+
 Signature manuelle en local :
 
 ```bat

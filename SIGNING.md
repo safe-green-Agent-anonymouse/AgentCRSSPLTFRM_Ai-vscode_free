@@ -1,12 +1,22 @@
 # Signature du code : etat et demarche
 
+## Choix du projet
+
+Le projet s'appuie sur les **attestations de provenance** (Sigstore / GitHub) et
+sur les empreintes SHA-256. Il n'utilise pas de certificat Authenticode : un tel
+certificat publie le nom de son titulaire dans chaque binaire signe, ce que ce
+projet, maintenu de maniere anonyme, ne souhaite pas.
+
+Consequence assumee : Windows SmartScreen affiche « editeur inconnu » au premier
+lancement. L'origine des binaires reste verifiable publiquement (ci-dessous).
+
 ## Ce qui est en place
 
 | Mecanisme | Cout | Effet |
 | --- | --- | --- |
 | `SHA256SUMS.txt` | gratuit | verifier qu'un fichier telecharge est intact |
 | Attestation de provenance GitHub | gratuit (depot public) | prouver que le binaire vient de ce depot et de ce workflow |
-| Signature Authenticode | certificat requis | supprime l'avertissement « editeur inconnu » de Windows |
+| Signature Authenticode | certificat requis, identite publique | supprime l'avertissement « editeur inconnu » de Windows |
 
 Verification de la provenance par un utilisateur :
 
@@ -14,34 +24,28 @@ Verification de la provenance par un utilisateur :
 gh attestation verify EDAC-Console.exe --repo safe-green-Agent-anonymouse/AgentCRSSPLTFRM_Ai-vscode_free
 ```
 
-## Candidature SignPath Foundation (certificat gratuit, open source)
+Les attestations sont produites par `actions/attest-build-provenance` dans
+`.github/workflows/windows-exe.yml`, pour l'executable portable et pour
+l'installeur, et publiees dans le journal de transparence Rekor.
 
-SignPath Foundation offre un certificat de signature de code aux projets open
-source, avec signature declenchee depuis GitHub Actions.
+## Si Authenticode devient necessaire un jour
 
-Prerequis du projet :
+Deux voies, toutes deux exigeant une identite verifiable (personne physique ou
+structure juridique) publiee dans le certificat :
 
-- depot **public** (fait) ;
-- licence open source (ici : The Unlicense, domaine public) ;
-- code source complet et build reproductible depuis la CI ;
-- pas de composant proprietaire, pas de telemetrie cachee ;
-- un responsable identifiable pour le projet.
+1. **Certificat commercial** (DigiCert, Sectigo, SSL.com...). Le workflow est
+   deja pret : deposer `WINDOWS_CERT_PFX_BASE64` et `WINDOWS_CERT_PASSWORD` en
+   secrets GitHub, et `tools/sign_windows.ps1` signe, horodate et verifie les
+   deux binaires. Sans ces secrets, les etapes sont ignorees.
+2. **SignPath Foundation** (https://signpath.org/apply), gratuit pour l'open
+   source : depot public, licence open source, build reproductible en CI et
+   responsable identifiable. La signature se ferait alors via
+   `signpath/github-action-submit-signing-request`, en remplacement des etapes
+   `signtool`.
 
-Elements a fournir dans le formulaire https://signpath.org/apply :
+Un certificat auto-signe ne supprime pas l'avertissement SmartScreen : il ne
+sert qu'aux tests internes.
 
-- nom du projet : Expert Dev Autopilot Console (EDAC Console)
-- URL du depot : https://github.com/safe-green-Agent-anonymouse/AgentCRSSPLTFRM_Ai-vscode_free
-- licence : The Unlicense (`LICENSE`)
-- description : console de developpement autonome, fenetre Tkinter et CLI,
-  configuration en couches, journal avec annotations, garde-fous reseau et Git,
-  desinstalleur ; Python pur, sans dependance au runtime.
-- artefacts a signer : `EDAC-Console.exe` (portable) et
-  `EDAC-Console-Setup-<version>.exe` (installeur Inno Setup)
-- build : `.github/workflows/windows-exe.yml`, runner `windows-latest`,
-  PyInstaller puis Inno Setup, artefacts et empreintes publies a chaque build.
+## Contact
 
-Une fois la demande acceptee, SignPath fournit un `SIGNPATH_API_TOKEN` et des
-identifiants d'organisation/projet : la signature se fait alors via l'action
-`signpath/github-action-submit-signing-request`, en remplacement des etapes
-`signtool` actuelles (qui restent utilisables avec un certificat commercial via
-les secrets `WINDOWS_CERT_PFX_BASE64` et `WINDOWS_CERT_PASSWORD`).
+iSafe_User002@proton.me

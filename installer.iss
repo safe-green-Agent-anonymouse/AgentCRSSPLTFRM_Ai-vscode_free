@@ -1,9 +1,9 @@
 ; Installateur Windows professionnel (Inno Setup 6).
-; Build : iscc /DAppVersion=1.0.0 installer.iss   (apres build-exe.bat)
+; Build : iscc /DAppVersion=1.0.1 installer.iss   (apres build-exe.bat)
 ; Sortie : release\EDAC-Console-Setup-<version>.exe
 
 #ifndef AppVersion
-  #define AppVersion "1.0.0"
+  #define AppVersion "1.0.1"
 #endif
 
 #define AppName "Expert Dev Autopilot Console"

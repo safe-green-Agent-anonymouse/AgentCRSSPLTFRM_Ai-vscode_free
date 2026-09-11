@@ -25,6 +25,9 @@ jobs:
     needs: tests
     runs-on: windows-latest
     timeout-minutes: 30
+    env:
+      WINDOWS_CERT_PFX_BASE64: ${{ secrets.WINDOWS_CERT_PFX_BASE64 }}
+      WINDOWS_CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -47,11 +50,22 @@ jobs:
       - name: Construire l'executable
         run: python -m PyInstaller --noconfirm --clean edac.spec
 
+      # Signature optionnelle : ignoree tant que les secrets ne sont pas definis.
+      - name: Signer l'executable
+        if: env.WINDOWS_CERT_PFX_BASE64 != ''
+        shell: pwsh
+        run: pwsh -File tools/sign_windows.ps1 -Path dist/EDAC-Console.exe
+
       - name: Construire l'installeur (Inno Setup)
         shell: pwsh
         run: |
           choco install innosetup --no-progress -y
           & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" /DAppVersion=${{ steps.meta.outputs.version }} installer.iss
+
+      - name: Signer l'installeur
+        if: env.WINDOWS_CERT_PFX_BASE64 != ''
+        shell: pwsh
+        run: pwsh -File tools/sign_windows.ps1 -Path release/EDAC-Console-Setup-${{ steps.meta.outputs.version }}.exe
 
       - name: Verifier et signer par empreinte
         shell: pwsh
@@ -68,6 +82,10 @@ jobs:
           }
           Copy-Item $exe release/ -Force
           (Get-Item $exe).VersionInfo | Format-List ProductName, FileVersion, CompanyName
+          foreach ($f in @($exe, $setup)) {
+            $sig = Get-AuthenticodeSignature $f
+            "{0} : {1} {2}" -f (Split-Path $f -Leaf), $sig.Status, $sig.SignerCertificate.Subject
+          }
 
       # Application fenetre : pas de sortie console, on redirige pour diagnostic
       # et on ne juge que le code de retour.

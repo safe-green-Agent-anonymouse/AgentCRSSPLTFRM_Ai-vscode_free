@@ -150,7 +150,28 @@ L'icone `assets/icon.ico` est regeneree par `python tools/make_icon.py`
 de `edac.__version__` par `tools/win_version.py` : une seule source de verite
 entre le code, l'`.exe` et l'installeur.
 
-Signature optionnelle (certificat non fourni, jamais versionne) :
+## Signature Authenticode
+
+Sans signature, Windows SmartScreen affiche « editeur inconnu ». La signature
+est optionnelle : le certificat n'est jamais versionne et les etapes de CI sont
+ignorees tant que les secrets sont absents.
+
+1. Obtenir un certificat de signature de code (OV ou EV) aupres d'une autorite
+   (DigiCert, Sectigo, SSL.com...). Un certificat auto-signe ne supprime pas
+   l'avertissement SmartScreen : il ne sert qu'aux tests internes.
+2. Convertir le `.pfx` en base64 :
+
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("cert.pfx")) | Set-Clipboard
+```
+
+3. Dans GitHub : *Settings -> Secrets and variables -> Actions -> New repository
+   secret* : `WINDOWS_CERT_PFX_BASE64` (le base64) et `WINDOWS_CERT_PASSWORD`
+   (le mot de passe du `.pfx`).
+4. Relancer le workflow : `tools/sign_windows.ps1` signe et horodate l'`.exe`
+   puis l'installeur, verifie chaque signature et efface le `.pfx` temporaire.
+
+Signature manuelle en local :
 
 ```bat
 signtool sign /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 /f cert.pfx dist\EDAC-Console.exe

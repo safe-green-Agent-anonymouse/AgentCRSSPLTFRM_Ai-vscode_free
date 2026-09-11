@@ -1,6 +1,7 @@
 """Tests du packaging Windows : icone, ressource de version, spec, installeur."""
 from __future__ import annotations
 
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -27,6 +28,21 @@ class VersionResourceTests(unittest.TestCase):
         self.assertIn("VSVersionInfo", content)
         self.assertIn("EDAC-Console.exe", content)
         self.assertIn(edac.__version__, content)
+
+
+class WindowedStreamsTests(unittest.TestCase):
+    def test_missing_stdout_is_replaced(self) -> None:
+        """Sous PyInstaller --windowed, sys.stdout vaut None : la CLI doit tenir."""
+        from edac import cli
+
+        original = sys.stdout
+        sys.stdout = None  # type: ignore[assignment]
+        try:
+            cli._ensure_streams()
+            self.assertIsNotNone(sys.stdout)
+            print("sortie ignoree")
+        finally:
+            sys.stdout = original
 
 
 class PackagingFilesTests(unittest.TestCase):

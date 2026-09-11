@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import queue
 import sys
 import threading
@@ -109,7 +110,20 @@ def _run_command(config: Config, command: str) -> int:
     return code["value"]
 
 
+def _ensure_streams() -> None:
+    """Executable fenetre (PyInstaller --windowed) : stdout/stderr valent None.
+
+    Sans ce garde-fou, le premier `print` d'une commande CLI leve AttributeError.
+    """
+    devnull = None
+    for name in ("stdout", "stderr"):
+        if getattr(sys, name) is None:
+            devnull = devnull or open(os.devnull, "w", encoding="utf-8")
+            setattr(sys, name, devnull)
+
+
 def main(argv: list[str] | None = None) -> int:
+    _ensure_streams()
     parser = build_parser()
     args = parser.parse_args(argv)
 

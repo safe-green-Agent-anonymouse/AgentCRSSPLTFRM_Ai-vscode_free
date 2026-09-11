@@ -45,7 +45,8 @@ exe = EXE(
     upx_exclude=[],
     runtime_tmpdir=None,
     console=False,          # application fenetree : pas de console noire
-    disable_windowed_traceback=False,
+    # True : une erreur n'ouvre pas de boite de dialogue modale (bloquerait la CI)
+    disable_windowed_traceback=True,
     icon=str(icon_file) if icon_file.exists() else None,
     version=str(version_file) if version_file else None,
 )

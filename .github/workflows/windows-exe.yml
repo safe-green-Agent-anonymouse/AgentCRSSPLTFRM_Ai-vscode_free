@@ -13,6 +13,7 @@ permissions:
 jobs:
   tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -23,6 +24,7 @@ jobs:
   build-exe:
     needs: tests
     runs-on: windows-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -67,10 +69,16 @@ jobs:
           Copy-Item $exe release/ -Force
           (Get-Item $exe).VersionInfo | Format-List ProductName, FileVersion, CompanyName
 
+      # Executable fenetre : aucune sortie console, on ne juge que le code de
+      # retour, et on tue le processus s'il reste bloque (dialogue inattendu).
       - name: Test de demarrage (mode CLI)
         shell: pwsh
         run: |
-          $p = Start-Process -FilePath dist\EDAC-Console.exe -ArgumentList 'config','list' -PassThru -Wait
+          $p = Start-Process -FilePath dist\EDAC-Console.exe -ArgumentList 'config','list' -PassThru
+          if (-not $p.WaitForExit(90000)) {
+            $p.Kill()
+            throw "l'executable ne s'est pas termine en 90 s"
+          }
           if ($p.ExitCode -ne 0) { throw "l'executable a renvoye $($p.ExitCode)" }
 
       - uses: actions/upload-artifact@v4

@@ -21,7 +21,7 @@ source, avec signature declenchee depuis GitHub Actions.
 
 Prerequis du projet :
 
-- depot **public** ;
+- depot **public** (fait) ;
 - licence open source (ici : The Unlicense, domaine public) ;
 - code source complet et build reproductible depuis la CI ;
 - pas de composant proprietaire, pas de telemetrie cachee ;

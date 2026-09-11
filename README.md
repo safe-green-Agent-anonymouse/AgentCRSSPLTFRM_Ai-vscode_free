@@ -142,7 +142,7 @@ Deux artefacts, comme un logiciel Windows classique :
 
 ```bat
 build-exe.bat            :: icone + exe + installeur (si Inno Setup 6 est installe) + SHA-256
-iscc /DAppVersion=1.0.0 installer.iss   :: installeur seul
+iscc /DAppVersion=1.0.1 installer.iss   :: installeur seul
 ```
 
 L'icone `assets/icon.ico` est regeneree par `python tools/make_icon.py`
@@ -198,7 +198,7 @@ de demarrage de l'executable, `SHA256SUMS.txt`, artefact telechargeable. Un tag
 `v*` publie en plus une release GitHub avec les deux `.exe` et les empreintes :
 
 ```bash
-git tag v1.0.0 && git push origin v1.0.0
+git tag v1.0.1 && git push origin v1.0.1
 ```
 
 ## Tests

@@ -1,0 +1,104 @@
+name: windows-exe
+
+on:
+  push:
+    branches: ["main"]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: sudo apt-get update && sudo apt-get install -y python3-tk
+      - run: python -m unittest discover -s tests -v
+
+  build-exe:
+    needs: tests
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+
+      - name: Version de l'application
+        id: meta
+        shell: pwsh
+        run: |
+          $v = (Select-String -Path edac/__init__.py -Pattern '__version__\s*=\s*"([^"]+)"').Matches[0].Groups[1].Value
+          if ($env:GITHUB_REF -like 'refs/tags/v*') { $v = $env:GITHUB_REF -replace '^refs/tags/v','' }
+          "version=$v" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          Write-Host "version = $v"
+
+      - run: python -m pip install --upgrade pip pyinstaller pillow
+
+      - name: Generer l'icone
+        run: python tools/make_icon.py
+
+      - name: Construire l'executable
+        run: python -m PyInstaller --noconfirm --clean edac.spec
+
+      - name: Construire l'installeur (Inno Setup)
+        shell: pwsh
+        run: |
+          choco install innosetup --no-progress -y
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" /DAppVersion=${{ steps.meta.outputs.version }} installer.iss
+
+      - name: Verifier et signer par empreinte
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path release | Out-Null
+          $exe = "dist/EDAC-Console.exe"
+          $setup = "release/EDAC-Console-Setup-${{ steps.meta.outputs.version }}.exe"
+          foreach ($f in @($exe, $setup)) {
+            if (-not (Test-Path $f)) { throw "artefact manquant : $f" }
+            $item = Get-Item $f
+            $hash = (Get-FileHash $f -Algorithm SHA256).Hash
+            "{0}  {1}  ({2:N1} Mo)" -f $hash, $item.Name, ($item.Length / 1MB)
+            "$hash  $($item.Name)" | Out-File -Append -Encoding ascii release/SHA256SUMS.txt
+          }
+          Copy-Item $exe release/ -Force
+          (Get-Item $exe).VersionInfo | Format-List ProductName, FileVersion, CompanyName
+
+      # Application fenetre : pas de sortie console, on redirige pour diagnostic
+      # et on ne juge que le code de retour.
+      - name: Test de demarrage (mode CLI)
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath dist\EDAC-Console.exe -ArgumentList 'config','list' `
+            -PassThru -RedirectStandardOutput release\smoke-stdout.txt `
+            -RedirectStandardError release\smoke-stderr.txt
+          $fini = $p.WaitForExit(60000)
+          Get-Content release\smoke-stdout.txt -TotalCount 5 -ErrorAction SilentlyContinue
+          Get-Content release\smoke-stderr.txt -TotalCount 20 -ErrorAction SilentlyContinue
+          if (-not $fini) { $p.Kill(); throw "l'executable ne s'est pas termine en 60 s" }
+          if ($p.ExitCode -ne 0) { throw "l'executable a renvoye $($p.ExitCode)" }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: EDAC-Console-windows-${{ steps.meta.outputs.version }}
+          path: |
+            release/EDAC-Console.exe
+            release/EDAC-Console-Setup-*.exe
+            release/SHA256SUMS.txt
+            release/smoke-*.txt
+          if-no-files-found: error
+
+      - name: Publier la release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            release/EDAC-Console.exe
+            release/EDAC-Console-Setup-*.exe
+            release/SHA256SUMS.txt

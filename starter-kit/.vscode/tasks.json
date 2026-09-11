@@ -1,0 +1,82 @@
+{
+  "version": "2.0.0",
+  "options": {
+    "cwd": "${workspaceFolder}"
+  },
+  "presentation": {
+    "reveal": "always",
+    "panel": "dedicated",
+    "clear": true
+  },
+  "tasks": [
+    {
+      "label": "setup",
+      "type": "shell",
+      "group": "build",
+      "command": "./scripts/build.sh setup",
+      "windows": { "command": "scripts\\build.cmd setup" }
+    },
+    {
+      "label": "dev",
+      "type": "shell",
+      "isBackground": true,
+      "command": "./scripts/build.sh dev",
+      "windows": { "command": "scripts\\build.cmd dev" }
+    },
+    {
+      "label": "lint",
+      "type": "shell",
+      "problemMatcher": ["$eslint-stylish"],
+      "command": "./scripts/build.sh lint",
+      "windows": { "command": "scripts\\build.cmd lint" }
+    },
+    {
+      "label": "test",
+      "type": "shell",
+      "group": { "kind": "test", "isDefault": true },
+      "command": "./scripts/build.sh test",
+      "windows": { "command": "scripts\\build.cmd test" }
+    },
+    {
+      "label": "build",
+      "type": "shell",
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": ["$tsc"],
+      "command": "./scripts/build.sh build",
+      "windows": { "command": "scripts\\build.cmd build" }
+    },
+    {
+      "label": "package: exe",
+      "type": "shell",
+      "dependsOn": ["build"],
+      "command": "./scripts/build.sh package exe",
+      "windows": { "command": "scripts\\build.cmd package exe" }
+    },
+    {
+      "label": "package: apk",
+      "type": "shell",
+      "dependsOn": ["build"],
+      "command": "./scripts/build.sh package apk",
+      "windows": { "command": "scripts\\build.cmd package apk" }
+    },
+    {
+      "label": "package: dmg",
+      "type": "shell",
+      "dependsOn": ["build"],
+      "command": "./scripts/build.sh package dmg",
+      "windows": { "command": "scripts\\build.cmd package dmg" }
+    },
+    {
+      "label": "verify artefacts",
+      "type": "shell",
+      "command": "./scripts/build.sh verify",
+      "windows": { "command": "scripts\\build.cmd verify" }
+    },
+    {
+      "label": "clean",
+      "type": "shell",
+      "command": "./scripts/build.sh clean",
+      "windows": { "command": "scripts\\build.cmd clean" }
+    }
+  ]
+}

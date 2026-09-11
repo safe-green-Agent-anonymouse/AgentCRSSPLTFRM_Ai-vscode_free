@@ -9,3 +9,9 @@ config.json.bak
 
 *.log
 logs/
+
+# Certificats de signature : jamais versionnes
+*.pfx
+*.p12
+*.key
+*.crt

@@ -71,6 +71,25 @@ class PackagingFilesTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_signing_is_optional_and_secret_based(self) -> None:
+        script = (ROOT / "tools" / "sign_windows.ps1").read_text(encoding="utf-8")
+        self.assertIn("WINDOWS_CERT_PFX_BASE64", script)
+        self.assertIn("Remove-Item $pfx", script)
+        workflow = (ROOT / ".github" / "workflows" / "windows-exe.yml").read_text(encoding="utf-8")
+        self.assertIn("tools/sign_windows.ps1", workflow)
+        self.assertIn("if: env.WINDOWS_CERT_PFX_BASE64 != ''", workflow)
+
+    def test_workflow_attests_provenance(self) -> None:
+        workflow = (ROOT / ".github" / "workflows" / "windows-exe.yml").read_text(encoding="utf-8")
+        self.assertIn("actions/attest-build-provenance", workflow)
+        self.assertIn("id-token: write", workflow)
+        self.assertIn("attestations: write", workflow)
+
+    def test_no_certificate_is_tracked(self) -> None:
+        for pattern in ("*.pfx", "*.p12", "*.key"):
+            self.assertFalse(list(ROOT.rglob(pattern)), f"certificat present : {pattern}")
+            self.assertIn(pattern, (ROOT / ".gitignore").read_text(encoding="utf-8"))
+
     def test_installer_declares_uninstall_cleanup(self) -> None:
         iss = (ROOT / "installer.iss").read_text(encoding="utf-8")
         for expected in ("UninstallDisplayIcon", "SetupIconFile", "[UninstallDelete]", "AppId"):

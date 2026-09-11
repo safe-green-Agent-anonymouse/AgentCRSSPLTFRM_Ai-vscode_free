@@ -51,6 +51,8 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Source: "dist\{#AppExe}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "README.md"; DestDir: "{app}"; Flags: ignoreversion isreadme
 Source: "LICENSE"; DestDir: "{app}"; Flags: ignoreversion
+Source: "docs\RESUME.md"; DestDir: "{app}\docs"; Flags: ignoreversion
+Source: "docs\architecture.png"; DestDir: "{app}\docs"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\{#AppShort}"; Filename: "{app}\{#AppExe}"

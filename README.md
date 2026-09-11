@@ -181,8 +181,10 @@ mais prouve que le binaire vient bien de ce depot et de ce workflow :
 gh attestation verify EDAC-Console.exe --repo safe-green-Agent-anonymouse/AgentCRSSPLTFRM_Ai-vscode_free
 ```
 
-Une signature Authenticode gratuite est possible pour les projets open source
-via SignPath Foundation (https://signpath.org/apply) ; voir `SIGNING.md`.
+La provenance est le mode de verification retenu par le projet : elle n'expose
+aucune donnee personnelle, contrairement a un certificat Authenticode dont le
+nom du titulaire est publie dans chaque binaire. Details et alternatives dans
+`SIGNING.md`.
 
 Signature manuelle en local :
 
@@ -206,6 +208,10 @@ git tag v1.0.1 && git push origin v1.0.1
 ```bash
 python -m unittest discover -s tests -v   # 42 tests : config, profils, garde-fous, journaux, reseau, desinstallation, packaging
 ```
+
+## Contact
+
+Questions, bugs, securite : iSafe_User002@proton.me, ou une issue GitHub.
 
 ## Limite verifiee
 

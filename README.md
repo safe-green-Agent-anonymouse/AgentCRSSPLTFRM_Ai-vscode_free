@@ -5,6 +5,13 @@ l'agent `expert-dev-autopilot` : actions de build et de packaging, module de
 configuration complet, journal en flux. Utilisable aussi en ligne de commande
 et sous Linux/macOS.
 
+Documentation : [`docs/RESUME.md`](docs/RESUME.md) (resume commente : choix
+techniques, chaine de build, mecanismes de confiance) et le schema
+d'architecture ci-dessous, regenerable par
+`python tools/make_architecture_diagram.py`.
+
+![Architecture](docs/architecture.png)
+
 ## Demarrage rapide (Windows)
 
 ```bat

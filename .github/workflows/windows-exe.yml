@@ -132,3 +132,5 @@ jobs:
             release/EDAC-Console.exe
             release/EDAC-Console-Setup-*.exe
             release/SHA256SUMS.txt
+            docs/RESUME.md
+            docs/architecture.png

@@ -7,6 +7,7 @@ Nova Studio complète la console existante du dépôt avec une interface web res
 - Tableau de bord, projets, six rôles d'assistant, chat IA, recherche de dépôts publics GitHub et notes locales exportables.
 - Mode hors ligne pour l'interface, les projets et les notes via un service worker/PWA.
 - Connexion directe à Ollama ou à un endpoint `/v1/chat/completions` compatible OpenAI ; aucun fournisseur n'est inclus.
+- Mode aléatoire OpenRouter : sélection aléatoire parmi son catalogue en direct, limitée aux modèles déclarant un tarif d'entrée et de sortie nul.
 - Workflow GitHub Actions pour publier `web/` sur GitHub Pages.
 
 ## Utilisation locale
@@ -16,6 +17,14 @@ Depuis la racine du dépôt : `py -m http.server 8000 --directory web`, puis ouv
 ### Ollama
 
 Installer Ollama, télécharger un modèle et démarrer le serveur local. Dans **Connecter un modèle**, configurer `http://localhost:11434/v1` et le nom exact du modèle. Les règles CORS d'Ollama doivent autoriser l'origine de l'application. GitHub Pages est servi en HTTPS ; le navigateur peut bloquer l'accès à Ollama en HTTP. Dans ce cas, utiliser l'application sur localhost ou un proxy HTTPS de confiance.
+
+### Mode aléatoire gratuit
+
+Dans **Modèles gratuits**, Nova charge le catalogue public OpenRouter avec `max_price=0` et filtre les modèles dont l'API déclare à la fois un tarif d'entrée et de sortie égal à zéro. Le catalogue peut changer et l'accès reste soumis aux quotas, à la disponibilité, aux règles d'inscription et aux conditions du fournisseur. Confirme les conditions en vigueur chez OpenRouter avant toute utilisation; « gratuit » ne garantit ni un quota illimité ni une disponibilité permanente.
+
+Crée ta clé sur [OpenRouter](https://openrouter.ai/settings/keys), colle-la dans Nova Studio et enregistre-la pour l'onglet. Aucune clé n'est intégrée à l'application ou stockée dans `localStorage`; elle est gardée dans `sessionStorage` pendant la session du navigateur. Les scripts exécutés par la page peuvent lire cette clé, donc ne l'utilise pas sur un appareil partagé et ne colle pas de données sensibles dans le chat.
+
+Le mode aléatoire ne fonctionne pas hors ligne. Si un modèle échoue ou est limité, Nova essaie jusqu'à deux autres modèles de la liste gratuite chargée, puis indique explicitement l'erreur.
 
 ### API distante
 

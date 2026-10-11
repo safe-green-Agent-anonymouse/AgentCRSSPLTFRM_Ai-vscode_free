@@ -6,10 +6,14 @@ async function injectFreeModels(response) {
   if (!response || !response.headers.get("content-type")?.includes("text/html")) return response;
   const html = await response.text();
   if (html.includes("free-models.js")) return new Response(html, response);
+  const headers = new Headers(response.headers);
+  headers.delete("content-length");
+  headers.delete("content-encoding");
+  headers.delete("transfer-encoding");
   return new Response(html.replace("</body>", `${featureScript}</body>`), {
     status: response.status,
     statusText: response.statusText,
-    headers: response.headers
+    headers
   });
 }
 

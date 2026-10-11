@@ -1,20 +1,18 @@
-const CACHE = "nova-studio-v2";
-const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon.svg", "./free-models.js"];
-const featureScript = '<script src="./free-models.js"></script>';
+const CACHE = "nova-studio-v3";
+const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon.svg", "./free-models.js", "./messages-ui.js"];
+const UI_SCRIPTS = ["messages-ui.js", "free-models.js"];
 
-async function injectFreeModels(response) {
+async function injectUiScripts(response) {
   if (!response || !response.headers.get("content-type")?.includes("text/html")) return response;
-  const html = await response.text();
-  if (html.includes("free-models.js")) return new Response(html, response);
+  let html = await response.text();
+  for (const script of UI_SCRIPTS) {
+    if (!html.includes(script)) html = html.replace("</body>", `<script src="./${script}"></script></body>`);
+  }
   const headers = new Headers(response.headers);
   headers.delete("content-length");
   headers.delete("content-encoding");
   headers.delete("transfer-encoding");
-  return new Response(html.replace("</body>", `${featureScript}</body>`), {
-    status: response.status,
-    statusText: response.statusText,
-    headers
-  });
+  return new Response(html, { status: response.status, statusText: response.statusText, headers });
 }
 
 self.addEventListener("install", (event) => {
@@ -30,8 +28,8 @@ self.addEventListener("fetch", (event) => {
   if (event.request.mode === "navigate") {
     event.respondWith(fetch(event.request).then((response) => {
       if (response.ok) caches.open(CACHE).then((cache) => cache.put("./index.html", response.clone()));
-      return injectFreeModels(response);
-    }).catch(() => caches.match("./index.html").then(injectFreeModels)));
+      return injectUiScripts(response);
+    }).catch(() => caches.match("./index.html").then(injectUiScripts)));
     return;
   }
   event.respondWith(caches.match(event.request).then((cached) => cached || fetch(event.request).then((response) => {

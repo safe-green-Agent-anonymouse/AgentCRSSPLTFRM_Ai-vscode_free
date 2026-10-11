@@ -5,6 +5,7 @@ Nova Studio complète la console existante du dépôt avec une interface web res
 ## Fonctions
 
 - Tableau de bord, projets, six rôles d'assistant, chat IA, recherche de dépôts publics GitHub et notes locales exportables.
+- Suppression message par message dans l'historique local de l'appareil. La suppression ne révoque pas les requêtes déjà envoyées au fournisseur IA.
 - Mode hors ligne pour l'interface, les projets et les notes via un service worker/PWA.
 - Connexion directe à Ollama ou à un endpoint `/v1/chat/completions` compatible OpenAI ; aucun fournisseur n'est inclus.
 - Mode aléatoire OpenRouter : sélection aléatoire parmi son catalogue en direct, limitée aux modèles déclarant un tarif d'entrée et de sortie nul.
@@ -33,6 +34,8 @@ Renseigner l'URL de base, le nom de modèle et éventuellement sa clé. La clé 
 ## Gratuité et confidentialité
 
 GitHub Pages et le code sont gratuits dans leurs limites de service. Ollama est gratuit après installation et téléchargement, mais utilise les ressources de l'ordinateur. Nova Studio ne garantit aucun revenu. Les notes, projets et conversations restent dans le navigateur de cet appareil ; aucune synchronisation entre appareils n'est activée. Hors ligne, les API distantes et la recherche GitHub ne fonctionnent pas.
+
+Nova Studio n'a pas de comptes utilisateurs ni de rôle administrateur intégré : « pour moi » désigne l'historique de l'appareil et du profil de navigateur utilisé. Les données ne sont pas partagées entre appareils.
 
 ## Publication Pages
 

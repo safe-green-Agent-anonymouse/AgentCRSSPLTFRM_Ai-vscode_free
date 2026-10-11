@@ -50,18 +50,20 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Nova Studio assets OK ({platform.architecture()[0]})")
         return 0
 
-    from webview import create_window, start
-
-    storage_root = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
-    storage_path = storage_root / "NovaStudio" / "WebView2"
-    storage_path.mkdir(parents=True, exist_ok=True)
-
-    handler = partial(SimpleHTTPRequestHandler, directory=str(web_root))
-    server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
-    server_thread = threading.Thread(target=server.serve_forever, daemon=True)
-    server_thread.start()
-
+    server = None
+    server_thread = None
     try:
+        from webview import create_window, start
+
+        storage_root = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
+        storage_path = storage_root / "NovaStudio" / "WebView2"
+        storage_path.mkdir(parents=True, exist_ok=True)
+
+        handler = partial(SimpleHTTPRequestHandler, directory=str(web_root))
+        server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
+        server_thread = threading.Thread(target=server.serve_forever, daemon=True)
+        server_thread.start()
+
         create_window(
             "Nova Studio",
             url=f"http://127.0.0.1:{server.server_port}/index.html",
@@ -77,9 +79,11 @@ def main(argv: list[str] | None = None) -> int:
         show_startup_error(error)
         return 1
     finally:
-        server.shutdown()
-        server.server_close()
-        server_thread.join(timeout=2)
+        if server is not None:
+            server.shutdown()
+            server.server_close()
+        if server_thread is not None:
+            server_thread.join(timeout=2)
 
 
 if __name__ == "__main__":

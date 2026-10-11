@@ -53,8 +53,8 @@ jobs:
       - name: Smoke-test packaged executable
         shell: pwsh
         run: |
-          & "dist/Nova-Studio-${{ matrix.architecture }}.exe" --self-test
-          if ($LASTEXITCODE -ne 0) { throw "Nova Studio ${{ matrix.architecture }} self-test failed" }
+          $process = Start-Process -FilePath "dist/Nova-Studio-${{ matrix.architecture }}.exe" -ArgumentList "--self-test" -Wait -PassThru
+          if ($process.ExitCode -ne 0) { throw "Nova Studio ${{ matrix.architecture }} self-test exited with code $($process.ExitCode)" }
       - uses: actions/upload-artifact@v4
         with:
           name: Nova-Studio-Windows-${{ matrix.architecture }}

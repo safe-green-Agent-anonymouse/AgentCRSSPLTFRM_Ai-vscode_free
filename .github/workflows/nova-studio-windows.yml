@@ -1,0 +1,63 @@
+name: Nova Studio Windows desktop
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "nova_studio.py"
+      - "requirements-nova.txt"
+      - "web/**"
+      - "tests/test_nova_studio.py"
+      - ".github/workflows/nova-studio-windows.yml"
+  pull_request:
+    paths:
+      - "nova_studio.py"
+      - "requirements-nova.txt"
+      - "web/**"
+      - "tests/test_nova_studio.py"
+      - ".github/workflows/nova-studio-windows.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build Windows ${{ matrix.label }}
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: x64
+            label: 64-bit
+          - architecture: x86
+            label: 32-bit
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          architecture: ${{ matrix.architecture }}
+      - name: Install packaging dependencies
+        run: python -m pip install --upgrade pip -r requirements-nova.txt
+      - name: Check web assets
+        run: python nova_studio.py --self-test
+      - name: Build standalone executable
+        shell: pwsh
+        run: >-
+          python -m PyInstaller --noconfirm --clean --onefile --windowed
+          --name "Nova-Studio-${{ matrix.architecture }}"
+          --collect-all webview --collect-all clr_loader --collect-all pythonnet
+          --add-data "web;web" nova_studio.py
+      - name: Smoke-test packaged executable
+        shell: pwsh
+        run: |
+          & "dist/Nova-Studio-${{ matrix.architecture }}.exe" --self-test
+          if ($LASTEXITCODE -ne 0) { throw "Nova Studio ${{ matrix.architecture }} self-test failed" }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Nova-Studio-Windows-${{ matrix.architecture }}
+          path: dist/Nova-Studio-${{ matrix.architecture }}.exe
+          if-no-files-found: error
+          retention-days: 30
